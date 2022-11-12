@@ -33,6 +33,24 @@ class ContractRepository {
       }
     });
   }
+
+  async findByClientIdAndActive(clientId) {
+    return  this.repository.findAll({
+      where: {
+        clientId,
+        status: { [Op.eq]: ContractStatuses.IN_PROGRESS },
+      }
+    });
+  }
+
+  async findByContractorIdAndActive(contractorId) {
+    return  this.repository.findAll({
+      where: {
+        contractorId,
+        status: { [Op.eq]: ContractStatuses.IN_PROGRESS },
+      }
+    });
+  }
 }
 
 module.exports = { ContractRepository };
