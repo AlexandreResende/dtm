@@ -15,6 +15,24 @@ class ContractRepository {
   async findByIdAndContractorId(id, contractorId) {
     return  this.repository.findOne({ where: { id, contractorId } });
   }
+
+  async findByClientIdAndNotTerminatedStatus(clientId) {
+    return  this.repository.findAll({
+      where: {
+        clientId,
+        status: { [Op.not]: ContractStatuses.TERMINATED },
+      }
+    });
+  }
+
+  async findByContractorIdAndNotTerminatedStatus(contractorId) {
+    return  this.repository.findAll({
+      where: {
+        contractorId,
+        status: { [Op.not]: ContractStatuses.TERMINATED },
+      }
+    });
+  }
 }
 
 module.exports = { ContractRepository };

@@ -32,4 +32,17 @@ app.get('/contracts/:id', getProfile ,async (req, res) =>{
     res.json(contract);
 });
 
+app.get('/contracts', getProfile, async (req, res) => {
+    const { id: profileId, type: profileType } = req.profile;
+    let contracts;
+
+    if (profileType === ProfileType.CLIENT) {
+        contracts = await (new ContractRepository().findByClientIdAndNotTerminatedStatus(profileId));
+    } else {
+        contracts = await (new ContractRepository().findByContractorIdAndNotTerminatedStatus(profileId));
+    }
+
+    res.json(contracts);
+});
+
 module.exports = app;
