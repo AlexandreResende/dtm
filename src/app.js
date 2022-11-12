@@ -1,10 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { StatusCodes: { NOT_FOUND } } = require('http-status-codes');
+const { StatusCodes: { NOT_FOUND, FORBIDDEN } } = require('http-status-codes');
 
 const { sequelize } = require('./model');
 const { ProfileType } = require('./enums/profileType');
 const { getProfile } = require('./middleware/getProfile');
+const { verifyProfile } = require('./middleware/verifyProfile');
 
 const app = express();
 
@@ -14,6 +15,8 @@ app.set('models', sequelize.models)
 
 const { ContractRepository } = require('./repositories/contractRepository');
 const { JobRepository } = require('./repositories/jobRepository');
+const { OperationRepository } = require('./repositories/operationRepository');
+const { ProfileRepository } = require('./repositories/profileRepository');
 
 app.get('/contracts/:id', getProfile ,async (req, res) =>{
     const {id} = req.params;
@@ -69,6 +72,43 @@ app.get('/jobs/unpaid', getProfile, async (req, res) => {
     }
 
     res.json(jobs);
+});
+
+app.post('/jobs/:job_id/pay', getProfile, verifyProfile, async (req, res) => {
+    const client = req.profile;
+    const jobId = req.params.job_id;
+
+    const job = await (new JobRepository().findById(jobId));
+
+    if (!job) {
+        return res.status(NOT_FOUND).json({ message: 'Job not found' });
+    }
+
+    if (job.paid) {
+        return res.status(FORBIDDEN).json({ message: 'Job already paid' });
+    }
+
+    const contractId = job.ContractId;
+    const contract = await (new ContractRepository().findById(contractId));
+
+    if (contract.ClientId !== client.id) {
+        return res.status(FORBIDDEN).json({ message: 'The contract is not related to the specified client' });
+    }
+
+    const contractorId = contract.ContractorId;
+    const contractor = await (new ProfileRepository().findById(contractorId));
+
+    if (!contractor) {
+        return res.status(NOT_FOUND).json({ message: 'Contractor not found' });
+    }
+
+    if (job.price > contractor.balance) {
+        return res.status(FORBIDDEN).json({ message: 'The contractor has insuficient funds' });
+    }
+
+    await (new OperationRepository().pay(contract.ClientId, contractorId, jobId, job.price));
+
+    res.json();
 });
 
 module.exports = app;

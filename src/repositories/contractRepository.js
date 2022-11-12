@@ -8,6 +8,10 @@ class ContractRepository {
     this.repository = sequelize.models.Contract;
   }
 
+  async findById(id) {
+    return this.repository.findOne({ where: { id } });
+  }
+
   async findByIdAndClientId(id, clientId) {
     return  this.repository.findOne({ where: { id, clientId } });
   }

@@ -9,6 +9,8 @@ const getProfile = async (req, res, next) => {
         return res.status(UNAUTHORIZED).end();
     }
 
+    console.log(profile);
+
     req.profile = profile;
     next();
 }
