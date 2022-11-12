@@ -31,6 +31,13 @@ class OperationRepository {
       throw error;
     }
   }
+
+  async deposit(clientId, amount) {
+    await this.profileRepository.increment(
+      { balance: amount },
+      { where: { id: clientId }
+    });
+  }
 }
 
 module.exports = { OperationRepository };
